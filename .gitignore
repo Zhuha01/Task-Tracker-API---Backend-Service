@@ -1,0 +1,199 @@
+# =============================================================================
+# Python
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+develop-eggs/
+downloads/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env/
+env.bak/
+venv.bak/
+
+# Packaging / installers
+*.whl
+MANIFEST
+cython_debug/
+
+# =============================================================================
+# Environment & secrets (pydantic-settings)
+# =============================================================================
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.pem
+*.key
+secrets/
+credentials/
+secrets.json
+credentials.json
+
+# =============================================================================
+# FastAPI / Uvicorn
+# =============================================================================
+*.log
+logs/
+uvicorn.pid
+*.pid
+
+# =============================================================================
+# Alembic
+# =============================================================================
+# Migration scripts under alembic/versions/ stay tracked.
+# Ignore local offline SQL dumps if you generate them:
+# alembic/sql/
+
+# =============================================================================
+# PostgreSQL / SQLAlchemy / asyncpg
+# =============================================================================
+*.sql.dump
+*.dump
+*.backup
+pgdata/
+postgres-data/
+*.sqlite
+*.sqlite3
+*.db
+
+# =============================================================================
+# Redis / ARQ / fastapi-limiter
+# =============================================================================
+dump.rdb
+redis-data/
+*.rdb
+arq.dump
+.arq/
+
+# =============================================================================
+# JWT / bcrypt / local crypto material
+# =============================================================================
+*.jwk
+*.p12
+*.pfx
+private_keys/
+certs/
+
+# =============================================================================
+# Testing: pytest / pytest-asyncio / httpx / testcontainers
+# =============================================================================
+.pytest_cache/
+.cache/
+.hypothesis/
+.pytester/
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.coverage
+*.coverage.*
+.coverage
+.coverage.*
+coverage/
+nosetests.xml
+test-results/
+junit.xml
+junit-*.xml
+.pytest/
+.testcontainers/
+
+# =============================================================================
+# Ruff / mypy
+# =============================================================================
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyright/
+.pytype/
+
+# =============================================================================
+# structlog / OpenTelemetry
+# =============================================================================
+traces/
+otel-data/
+opentelemetry-collector-config.local.yaml
+
+# =============================================================================
+# Docker / Docker Compose
+# =============================================================================
+docker-compose.override.yml
+docker-compose.*.local.yml
+# Local bind-mounted volumes for Postgres/Redis
+data/
+!data/.gitkeep
+
+# =============================================================================
+# IDEs & editors
+# =============================================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
+*.code-workspace
+
+# =============================================================================
+# OS junk
+# =============================================================================
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# =============================================================================
+# Local tooling / misc
+# =============================================================================
+.direnv/
+.ipynb_checkpoints/
+bandit-report.json
+safety-report.json
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+.history/
+.local/
