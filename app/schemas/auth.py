@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -8,4 +12,4 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    sub: str | None = None
+    sub: Optional[str] = None
