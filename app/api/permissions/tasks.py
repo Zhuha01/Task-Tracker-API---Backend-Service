@@ -5,12 +5,15 @@ from typing import Optional
 from fastapi import HTTPException
 
 from app.api.permissions.projects import check_project_member
+from app.api.permissions.users import is_admin
 from app.models.project import Project
 from app.models.task import Task
 from app.models.user import User
 
 
 def check_task_access(user: User, task: Task) -> None:
+    if is_admin(user):
+        return
     check_project_member(user, task.project)
 
 

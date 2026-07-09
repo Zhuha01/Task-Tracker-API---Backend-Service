@@ -10,12 +10,16 @@ _FORBIDDEN = HTTPException(status_code=403, detail="Not enough permissions")
 
 
 def check_project_owner(user: User, project: Project) -> None:
-    if not is_admin(user) and project.owner_id != user.id:
+    if is_admin(user):
+        return
+    if project.owner_id != user.id:
         raise _FORBIDDEN
 
 
 def check_project_member(user: User, project: Project) -> None:
-    if is_admin(user) or project.owner_id == user.id:
+    if is_admin(user):
+        return
+    if project.owner_id == user.id:
         return
     if any(member.id == user.id for member in project.members):
         return
@@ -23,5 +27,7 @@ def check_project_member(user: User, project: Project) -> None:
 
 
 def check_project_edit(user: User, project: Project) -> None:
+    if is_admin(user):
+        return
     if user.id != project.owner_id:
         raise _FORBIDDEN
