@@ -110,7 +110,7 @@ async def patch(
         raise HTTPException(status_code=404, detail="Task not found")
     check_task_access(current_user, task)
 
-    if "assignee_id" in payload.model_fields_set:
+    if "assignee_id" in payload.model_dump(exclude_unset=True):
         check_assignee_is_project_member(task.project, payload.assignee_id)
 
     return await update_task(session, task, payload)
@@ -128,15 +128,12 @@ async def patch_status(
         raise HTTPException(status_code=404, detail="Task not found")
     check_task_access(current_user, task)
 
-    updated = await update_task_status(
+    return await update_task_status(
         session,
-        task_id,
-        payload.status,
-        current_user.id,
+        task,
+        payload,
+        actor_id=current_user.id,
     )
-    if updated is None:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return updated
 
 
 @router.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)

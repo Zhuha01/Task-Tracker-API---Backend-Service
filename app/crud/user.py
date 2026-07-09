@@ -50,24 +50,21 @@ async def create_user(session: AsyncSession, user_in: UserCreate) -> User:
 
 async def update_user(
     session: AsyncSession,
-    *,
-    user: User,
-    user_in: UserUpdate,
-    allow_role_change: bool,
+    obj: User,
+    obj_in: UserUpdate,
 ) -> User:
-    if user_in.email is not None:
-        user.email = str(user_in.email)
-    if user_in.name is not None:
-        user.name = user_in.name
-    if user_in.password is not None:
-        user.hashed_password = get_password_hash(user_in.password)
-    if allow_role_change and user_in.role is not None:
-        user.role = user_in.role
+    update_data = obj_in.model_dump(exclude_unset=True)
+    if "password" in update_data:
+        update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
+    if "email" in update_data:
+        update_data["email"] = str(update_data["email"])
+    for field, value in update_data.items():
+        setattr(obj, field, value)
 
-    session.add(user)
+    session.add(obj)
     await session.commit()
-    await session.refresh(user)
-    return user
+    await session.refresh(obj)
+    return obj
 
 
 async def delete_user(session: AsyncSession, *, user: User) -> None:

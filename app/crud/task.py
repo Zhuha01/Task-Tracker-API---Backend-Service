@@ -10,7 +10,7 @@ from app.models.enums import TaskPriority, TaskStatus
 from app.models.history import TaskStatusHistory
 from app.models.project import Project
 from app.models.task import Task
-from app.schemas.task import TaskCreate, TaskUpdate
+from app.schemas.task import TaskCreate, TaskStatusUpdate, TaskUpdate
 
 SortBy = Literal["created_at", "deadline", "priority"]
 
@@ -105,53 +105,44 @@ async def create_task(
 
 async def update_task(
     session: AsyncSession,
-    task: Task,
-    task_in: TaskUpdate,
+    obj: Task,
+    obj_in: TaskUpdate,
 ) -> Task:
-    if task_in.title is not None:
-        task.title = task_in.title
-    if task_in.description is not None:
-        task.description = task_in.description
-    if task_in.priority is not None:
-        task.priority = task_in.priority
-    if task_in.deadline is not None:
-        task.deadline = task_in.deadline
-    if "assignee_id" in task_in.model_fields_set:
-        task.assignee_id = task_in.assignee_id
+    update_data = obj_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(obj, field, value)
 
-    session.add(task)
+    session.add(obj)
     await session.commit()
-    await session.refresh(task)
-    return task
+    await session.refresh(obj)
+    return obj
 
 
 async def update_task_status(
     session: AsyncSession,
-    task_id: int,
-    new_status: TaskStatus,
-    user_id: int,
-) -> Optional[Task]:
-    stmt = select(Task).where(Task.id == task_id)
-    result = await session.execute(stmt)
-    task = result.scalar_one_or_none()
-    if task is None:
-        return None
+    obj: Task,
+    obj_in: TaskStatusUpdate,
+    *,
+    actor_id: int,
+) -> Task:
+    update_data = obj_in.model_dump(exclude_unset=True)
+    old_status = obj.status
+    for field, value in update_data.items():
+        setattr(obj, field, value)
 
-    old_status = task.status
-    if old_status != new_status:
-        task.status = new_status
+    if "status" in update_data and update_data["status"] != old_status:
         history = TaskStatusHistory(
-            task_id=task.id,
-            user_id=user_id,
+            task_id=obj.id,
+            user_id=actor_id,
             old_status=old_status,
-            new_status=new_status,
+            new_status=update_data["status"],
         )
         session.add(history)
 
-    session.add(task)
+    session.add(obj)
     await session.commit()
-    await session.refresh(task)
-    return task
+    await session.refresh(obj)
+    return obj
 
 
 async def delete_task(session: AsyncSession, task: Task) -> None:
