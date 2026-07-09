@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -14,6 +15,17 @@ class UserCreate(UserBase):
     password: str = Field(
         ..., min_length=8, description="Password (minimum 8 characters)"
     )
+
+
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    name: Optional[str] = Field(
+        default=None, min_length=2, max_length=50, description="User name"
+    )
+    password: Optional[str] = Field(
+        default=None, min_length=8, description="Password (minimum 8 characters)"
+    )
+    role: Optional[Role] = None
 
 
 class UserRead(UserBase):
