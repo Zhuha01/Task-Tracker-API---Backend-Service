@@ -65,12 +65,7 @@ async def patch_me(
         if existing_user is not None and existing_user.id != current_user.id:
             raise HTTPException(status_code=400, detail="User already exists")
 
-    updated = await update_user(
-        session,
-        user=current_user,
-        user_in=payload,
-        allow_role_change=False,
-    )
+    updated = await update_user(session, current_user, payload)
     return updated
 
 
@@ -112,16 +107,13 @@ async def patch_user(
 
     check_can_update_user(current_user, target_user)
     check_role_change_in_payload(current_user, payload.role)
+    if not can_change_target_role(current_user, target_user):
+        check_forbid_role_in_me_payload(payload.role)
 
     if payload.email is not None:
         existing_user = await get_user_by_email(session, payload.email)
         if existing_user is not None and existing_user.id != target_user.id:
             raise HTTPException(status_code=400, detail="User already exists")
 
-    updated = await update_user(
-        session,
-        user=target_user,
-        user_in=payload,
-        allow_role_change=can_change_target_role(current_user, target_user),
-    )
+    updated = await update_user(session, target_user, payload)
     return updated

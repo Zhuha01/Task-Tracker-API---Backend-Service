@@ -53,18 +53,17 @@ async def get_projects(session: AsyncSession, user_id: int) -> list[Project]:
 
 async def update_project(
     session: AsyncSession,
-    project: Project,
-    project_update: ProjectUpdate,
+    obj: Project,
+    obj_in: ProjectUpdate,
 ) -> Project:
-    if project_update.name is not None:
-        project.name = project_update.name
-    if project_update.description is not None:
-        project.description = project_update.description
+    update_data = obj_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(obj, field, value)
 
-    session.add(project)
+    session.add(obj)
     await session.commit()
-    await session.refresh(project)
-    return project
+    await session.refresh(obj)
+    return obj
 
 
 async def delete_project(session: AsyncSession, project: Project) -> None:

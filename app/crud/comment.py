@@ -64,16 +64,17 @@ async def create_comment(
 
 async def update_comment(
     session: AsyncSession,
-    comment: Comment,
-    comment_in: CommentUpdate,
+    obj: Comment,
+    obj_in: CommentUpdate,
 ) -> Comment:
-    if comment_in.text is not None:
-        comment.text = comment_in.text
+    update_data = obj_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(obj, field, value)
 
-    session.add(comment)
+    session.add(obj)
     await session.commit()
-    await session.refresh(comment)
-    return comment
+    await session.refresh(obj)
+    return obj
 
 
 async def delete_comment(session: AsyncSession, comment: Comment) -> None:
