@@ -7,7 +7,7 @@ from sqlalchemy import DateTime, Enum, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
-from app.models.enums import TaskStatus
+from app.models.enums.enums import TaskStatus
 
 if TYPE_CHECKING:
     from app.models.task import Task

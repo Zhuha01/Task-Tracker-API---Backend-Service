@@ -1,6 +1,6 @@
 from app.models.base import Base
 from app.models.comment import Comment
-from app.models.enums import Role, TaskPriority, TaskStatus
+from app.models.enums.enums import Role, TaskPriority, TaskStatus
 from app.models.history import TaskStatusHistory
 from app.models.notification import Notification
 from app.models.project import Project, project_members

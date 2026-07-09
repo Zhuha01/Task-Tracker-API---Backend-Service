@@ -36,7 +36,7 @@ class Project(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
-    
+
     owner: Mapped["User"] = relationship(back_populates="projects_owned")
     members: Mapped[list["User"]] = relationship(
         secondary=project_members,
