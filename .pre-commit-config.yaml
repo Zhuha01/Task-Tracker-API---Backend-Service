@@ -3,6 +3,7 @@ repos:
     rev: v0.4.8
     hooks:
       - id: ruff
+        exclude: ^alembic/
         args: [ --fix ]
       - id: ruff-format
   
@@ -10,6 +11,8 @@ repos:
     rev: v1.10.0
     hooks:
       - id: mypy
+        exclude: ^alembic/
         additional_dependencies: 
           - sqlalchemy>=2.0.30
           - pydantic>=2.7.0
+          - pydantic-settings>=2.3.0
