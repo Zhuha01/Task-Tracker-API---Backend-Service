@@ -14,21 +14,29 @@ class Settings(BaseSettings):
 
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
-    POSTGRES_HOST: str = "localhost"
-    POSTGRES_PORT: int = 5432
+    POSTGRES_HOST: str
+    POSTGRES_PORT: int
     POSTGRES_DB: str
 
-    SECRET_KEY: str
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REDIS_HOST: str
+    REDIS_PORT: int
 
-    @computed_field
+    SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+
+    @computed_field  # type: ignore
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
         return (
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
+
+    @computed_field  # type: ignore
+    @property
+    def REDIS_URL(self) -> str:
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}"
 
 
 settings = Settings()
