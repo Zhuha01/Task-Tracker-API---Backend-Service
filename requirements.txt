@@ -27,3 +27,4 @@ mypy>=1.10.0
 pre-commit>=3.7.1               
 
 greenlet>=3.0.3
+pydantic[email]>=2.7.0
