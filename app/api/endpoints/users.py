@@ -6,6 +6,13 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_admin, get_current_user
+from app.api.permissions import (
+    can_change_target_role,
+    check_can_delete_user,
+    check_can_update_user,
+    check_forbid_role_in_me_payload,
+    check_role_change_in_payload,
+)
 from app.crud.user import (
     delete_user,
     get_user_by_email,
@@ -14,7 +21,6 @@ from app.crud.user import (
     update_user,
 )
 from app.db.session import get_db
-from app.models.enums import Role
 from app.models.user import User
 from app.schemas.user import UserRead, UserUpdate
 
@@ -52,8 +58,7 @@ async def patch_me(
     session: SessionDep,
     current_user: CurrentUserDep,
 ):
-    if payload.role is not None:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    check_forbid_role_in_me_payload(payload.role)
 
     if payload.email is not None:
         existing_user = await get_user_by_email(session, payload.email)
@@ -88,8 +93,7 @@ async def delete_user_by_id(
     if target_user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
-    if target_user.role == Role.admin and target_user.id != current_admin.id:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    check_can_delete_user(current_admin, target_user)
 
     await delete_user(session, user=target_user)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -106,28 +110,18 @@ async def patch_user(
     if target_user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
-    is_self = current_user.id == user_id
-    is_admin = current_user.role == Role.admin
-
-    if not is_self and not is_admin:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
-
-    if is_admin and not is_self and target_user.role == Role.admin:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
-
-    if not is_admin and payload.role is not None:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    check_can_update_user(current_user, target_user)
+    check_role_change_in_payload(current_user, payload.role)
 
     if payload.email is not None:
         existing_user = await get_user_by_email(session, payload.email)
         if existing_user is not None and existing_user.id != target_user.id:
             raise HTTPException(status_code=400, detail="User already exists")
 
-    allow_role_change = is_admin and not is_self and target_user.role != Role.admin
     updated = await update_user(
         session,
         user=target_user,
         user_in=payload,
-        allow_role_change=allow_role_change,
+        allow_role_change=can_change_target_role(current_user, target_user),
     )
     return updated

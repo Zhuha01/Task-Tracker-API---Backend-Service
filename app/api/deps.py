@@ -9,11 +9,11 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.permissions import check_admin
 from app.core.config import settings
 from app.core.security import ALGORITHM
 from app.crud.user import get_user_by_email
 from app.db.session import get_db
-from app.models.enums import Role
 from app.models.user import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
@@ -49,10 +49,5 @@ CurrentUserDep = Annotated[User, Depends(get_current_user)]
 
 
 async def get_current_admin(current_user: CurrentUserDep):
-    if current_user.role != Role.admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions",
-        )
-
+    check_admin(current_user)
     return current_user
