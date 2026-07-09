@@ -18,7 +18,9 @@ def check_admin(user: User) -> None:
 
 
 def check_user_is_self(current_user: User, target_user_id: int) -> None:
-    if not is_admin(current_user) and current_user.id != target_user_id:
+    if is_admin(current_user):
+        return
+    if current_user.id != target_user_id:
         raise _FORBIDDEN
 
 
@@ -34,8 +36,11 @@ def check_can_update_user(actor: User, target: User) -> None:
 
 
 def check_role_change_in_payload(actor: User, role: Role | None) -> None:
-    if role is not None and not is_admin(actor):
-        raise _FORBIDDEN
+    if role is None:
+        return
+    if is_admin(actor):
+        return
+    raise _FORBIDDEN
 
 
 def check_forbid_role_in_me_payload(role: Role | None) -> None:

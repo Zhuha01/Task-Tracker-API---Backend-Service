@@ -6,6 +6,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.api.permissions.projects import is_user_id_project_member_or_owner
 from app.crud.user import get_user_by_id
 from app.models.project import Project, project_members
 from app.schemas.project import ProjectCreate, ProjectUpdate
@@ -80,7 +81,7 @@ async def add_member_to_project(
     if user is None:
         return project
 
-    if any(member.id == user_id for member in project.members):
+    if is_user_id_project_member_or_owner(project, user_id):
         return project
 
     project.members.append(user)
