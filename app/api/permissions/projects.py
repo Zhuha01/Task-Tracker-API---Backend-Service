@@ -23,4 +23,5 @@ def check_project_member(user: User, project: Project) -> None:
 
 
 def check_project_edit(user: User, project: Project) -> None:
-    check_project_owner(user, project)
+    if user.id != project.owner_id:
+        raise _FORBIDDEN

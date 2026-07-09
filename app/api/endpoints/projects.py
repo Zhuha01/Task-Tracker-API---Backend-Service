@@ -12,7 +12,6 @@ from app.api.permissions import (
     check_admin,
     check_project_edit,
     check_project_member,
-    check_project_owner,
 )
 from app.crud.project import (
     add_member_to_project,
@@ -121,7 +120,7 @@ async def add_member(
     project = await get_project(session, project_id)
     if project is None:
         raise HTTPException(status_code=404, detail="Project not found")
-    check_project_owner(current_user, project)
+    check_project_edit(current_user, project)
 
     target_user = await get_user_by_id(session, user_id)
     if target_user is None:
@@ -145,7 +144,7 @@ async def remove_member(
     project = await get_project(session, project_id)
     if project is None:
         raise HTTPException(status_code=404, detail="Project not found")
-    check_project_owner(current_user, project)
+    check_project_edit(current_user, project)
 
     target_user = await get_user_by_id(session, user_id)
     if target_user is None:
