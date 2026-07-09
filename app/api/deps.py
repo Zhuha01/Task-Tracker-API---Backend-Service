@@ -6,12 +6,11 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.permissions import check_admin
-from app.core.config import settings
-from app.core.security import ALGORITHM
+from app.core.security import TOKEN_TYPE_ACCESS, decode_token
 from app.crud.user import get_user_by_email
 from app.db.session import get_db
 from app.models.user import User
@@ -30,9 +29,12 @@ async def get_current_user(token: TokenDep, session: SessionDep):
     )
 
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        payload = decode_token(token)
     except JWTError as exc:
         raise credentials_exception from exc
+
+    if payload.get("type") != TOKEN_TYPE_ACCESS:
+        raise credentials_exception
 
     email = payload.get("sub")
     if not email:

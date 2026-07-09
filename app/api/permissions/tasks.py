@@ -4,7 +4,10 @@ from typing import Optional
 
 from fastapi import HTTPException
 
-from app.api.permissions.projects import check_project_member
+from app.api.permissions.projects import (
+    check_project_member,
+    is_user_id_project_member_or_owner,
+)
 from app.api.permissions.users import is_admin
 from app.models.project import Project
 from app.models.task import Task
@@ -22,11 +25,8 @@ def check_assignee_is_project_member(
 ) -> None:
     if assignee_id is None:
         return
-    if project.owner_id == assignee_id:
-        return
-    if any(member.id == assignee_id for member in project.members):
-        return
-    raise HTTPException(
-        status_code=400,
-        detail="Assignee must be a project member",
-    )
+    if not is_user_id_project_member_or_owner(project, assignee_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Assignee must be a project member",
+        )

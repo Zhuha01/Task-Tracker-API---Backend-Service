@@ -2,6 +2,8 @@ from app.api.permissions.projects import (
     check_project_edit,
     check_project_member,
     check_project_owner,
+    is_project_member_or_owner,
+    is_user_id_project_member_or_owner,
 )
 from app.api.permissions.tasks import (
     check_assignee_is_project_member,
@@ -32,4 +34,6 @@ __all__ = [
     "check_task_access",
     "check_user_is_self",
     "is_admin",
+    "is_project_member_or_owner",
+    "is_user_id_project_member_or_owner",
 ]
