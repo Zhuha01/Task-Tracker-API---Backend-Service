@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Literal, Optional
 
 from fastapi import BackgroundTasks
-from sqlalchemy import Select, case, select
+from sqlalchemy import Select, case, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -94,6 +94,27 @@ async def get_tasks(
     )
     stmt = _apply_task_sort(stmt, sort_by)
     stmt = stmt.offset(skip).limit(limit)
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
+
+
+async def search_tasks(
+    session: AsyncSession,
+    project_id: int,
+    query: str,
+) -> list[Task]:
+    pattern = f"%{query}%"
+    stmt = (
+        select(Task)
+        .where(Task.project_id == project_id)
+        .where(
+            or_(
+                Task.title.ilike(pattern),
+                Task.description.ilike(pattern),
+            )
+        )
+        .order_by(Task.created_at.desc())
+    )
     result = await session.execute(stmt)
     return list(result.scalars().all())
 
