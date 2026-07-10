@@ -25,6 +25,7 @@ from app.crud.task import (
     delete_task,
     get_task,
     get_tasks,
+    search_tasks,
     update_task,
     update_task_status,
 )
@@ -66,6 +67,21 @@ async def list_tasks(
         skip=skip,
         limit=limit,
     )
+
+
+@router.get("/projects/{project_id}/tasks/search", response_model=List[TaskRead])
+async def search_project_tasks(
+    project_id: int,
+    session: SessionDep,
+    current_user: CurrentUserDep,
+    q: Annotated[str, Query(min_length=1)],
+):
+    project = await get_project(session, project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    check_project_member(current_user, project)
+
+    return await search_tasks(session, project_id, q)
 
 
 @router.post(
