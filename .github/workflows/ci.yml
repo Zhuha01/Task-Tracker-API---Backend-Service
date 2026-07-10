@@ -33,6 +33,21 @@ jobs:
         run: mypy app/
 
       - name: Run tests
+        env:
+          PROJECT_NAME: Task Tracker
+          VERSION: 0.1.0
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: "5432"
+          POSTGRES_DB: task_tracker
+          REDIS_HOST: localhost
+          REDIS_PORT: "6379"
+          CACHE_ENABLED: "false"
+          SECRET_KEY: ci-test-secret-key
+          ALGORITHM: HS256
+          ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+          REFRESH_TOKEN_EXPIRE_DAYS: "7"
         run: pytest --cov=app --cov-report=xml --cov-fail-under=70
 
       - name: Verify Docker build
