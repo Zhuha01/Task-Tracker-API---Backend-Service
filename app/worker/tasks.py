@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import logging
 
+from app.core.celery_app import celery_app
+
 logger = logging.getLogger(__name__)
 
 
-async def mock_send_email(email: str, message: str) -> None:
+@celery_app.task(name="send_mock_email_task")
+def send_mock_email_task(email: str, message: str) -> None:
     logger.info("MOCK EMAIL sent to %s: %s", email, message)

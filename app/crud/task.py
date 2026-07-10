@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Literal, Optional
 
-from fastapi import BackgroundTasks
 from sqlalchemy import Select, case, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -14,14 +13,13 @@ from app.models.history import TaskStatusHistory
 from app.models.project import Project
 from app.models.task import Task
 from app.schemas.task import TaskCreate, TaskStatusUpdate, TaskUpdate
-from app.services.notifications import mock_send_email
+from app.worker.tasks import send_mock_email_task
 
 SortBy = Literal["created_at", "deadline", "priority"]
 
 
 async def _notify_assignee(
     session: AsyncSession,
-    background_tasks: BackgroundTasks,
     *,
     assignee_id: int,
     message: str,
@@ -29,7 +27,7 @@ async def _notify_assignee(
     await create_notification(session, user_id=assignee_id, message=message)
     assignee = await get_user_by_id(session, assignee_id)
     if assignee:
-        background_tasks.add_task(mock_send_email, assignee.email, message)
+        send_mock_email_task.delay(assignee.email, message)
 
 
 def _apply_task_filters(
@@ -125,7 +123,6 @@ async def create_task(
     project_id: int,
     author_id: int,
     task_in: TaskCreate,
-    background_tasks: BackgroundTasks,
 ) -> Task:
     task = Task(
         title=task_in.title,
@@ -143,7 +140,6 @@ async def create_task(
     if task_in.assignee_id is not None and task_in.assignee_id != author_id:
         await _notify_assignee(
             session,
-            background_tasks,
             assignee_id=task_in.assignee_id,
             message=f'You have been assigned to task "{task.title}"',
         )
@@ -157,7 +153,6 @@ async def update_task(
     obj_in: TaskUpdate,
     *,
     actor_id: int,
-    background_tasks: BackgroundTasks,
 ) -> Task:
     update_data = obj_in.model_dump(exclude_unset=True)
     old_assignee_id = obj.assignee_id
@@ -176,7 +171,6 @@ async def update_task(
     ):
         await _notify_assignee(
             session,
-            background_tasks,
             assignee_id=obj.assignee_id,
             message=f'You have been assigned to task "{obj.title}"',
         )
