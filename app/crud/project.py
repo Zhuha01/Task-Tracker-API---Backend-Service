@@ -86,8 +86,8 @@ async def add_member_to_project(
     project.members.append(user)
     session.add(project)
     await session.commit()
-    await session.refresh(project)
-    return project
+    refreshed = await get_project(session, project.id)
+    return refreshed if refreshed is not None else project
 
 
 async def remove_member_from_project(
@@ -100,5 +100,5 @@ async def remove_member_from_project(
             project.members.remove(member)
     session.add(project)
     await session.commit()
-    await session.refresh(project)
-    return project
+    refreshed = await get_project(session, project.id)
+    return refreshed if refreshed is not None else project

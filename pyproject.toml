@@ -23,7 +23,24 @@ quote-style = "double"
 python_version = "3.12"
 plugins = ["pydantic.mypy"]
 exclude = ["alembic/versions/"]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "env"
 disable_error_code = ["attr-defined"]
+
+[[tool.mypy.overrides]]
+module = [
+    "jose",
+    "jose.*",
+    "passlib",
+    "passlib.*",
+    "celery",
+    "celery.*",
+    "slowapi",
+    "slowapi.*",
+    "redis",
+    "redis.*",
+]
+ignore_missing_imports = true
+disable_error_code = ["import-untyped"]

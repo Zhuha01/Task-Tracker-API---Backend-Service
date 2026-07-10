@@ -158,3 +158,59 @@ def user_token_headers(test_user: User) -> dict[str, str]:
 @pytest.fixture
 def admin_token_headers(admin_user: User) -> dict[str, str]:
     return _auth_headers(admin_user)
+
+
+@pytest.fixture(autouse=True)
+def mock_celery_email(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]:
+    calls: list[tuple[str, str]] = []
+
+    def fake_delay(email: str, message: str) -> None:
+        calls.append((email, message))
+
+    monkeypatch.setattr(
+        "app.crud.task.send_mock_email_task.delay",
+        fake_delay,
+    )
+    return calls
+
+
+@pytest.fixture(autouse=True)
+def disable_redis_cache(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("app.core.config.settings.CACHE_ENABLED", False)
+    monkeypatch.setattr("app.core.cache.settings.CACHE_ENABLED", False)
+
+
+@pytest.fixture
+async def member_user(db_session: AsyncSession, test_project) -> User:
+    from app.crud.project import add_member_to_project, get_project
+
+    user = await _create_user(
+        db_session,
+        email="member@example.com",
+        name="Member User",
+        role=Role.user,
+    )
+    project = await get_project(db_session, test_project.id)
+    assert project is not None
+    await add_member_to_project(db_session, project, user_id=user.id)
+    return user
+
+
+@pytest.fixture
+def member_token_headers(member_user: User) -> dict[str, str]:
+    return _auth_headers(member_user)
+
+
+@pytest.fixture
+async def non_member_user(db_session: AsyncSession) -> User:
+    return await _create_user(
+        db_session,
+        email="stranger@example.com",
+        name="Non Member",
+        role=Role.user,
+    )
+
+
+@pytest.fixture
+def non_member_token_headers(non_member_user: User) -> dict[str, str]:
+    return _auth_headers(non_member_user)
