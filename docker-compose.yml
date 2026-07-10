@@ -5,6 +5,15 @@ x-healthcheck: &healthcheck
   timeout: 5s
   retries: 5
 
+x-app-env: &app-env
+  env_file:
+    - .env
+  environment:
+    POSTGRES_HOST: db
+    POSTGRES_PORT: 5432
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+
 services:
   db:
     image: postgres:15-alpine
@@ -33,6 +42,31 @@ services:
     healthcheck:
       <<: *healthcheck
       test: ["CMD", "redis-cli", "ping"]
+
+  api:
+    build: .
+    container_name: task_tracker_api
+    restart: always
+    ports:
+      - "8000:8000"
+    <<: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build: .
+    container_name: task_tracker_worker
+    restart: always
+    command: celery -A app.core.celery_app:celery_app worker --loglevel=info
+    <<: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
   postgres_data:
