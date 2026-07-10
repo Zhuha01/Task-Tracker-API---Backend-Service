@@ -2,17 +2,34 @@ from __future__ import annotations
 
 from typing import Literal, Optional
 
+from fastapi import BackgroundTasks
 from sqlalchemy import Select, case, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.crud.notification import create_notification
+from app.crud.user import get_user_by_id
 from app.models.enums import TaskPriority, TaskStatus
 from app.models.history import TaskStatusHistory
 from app.models.project import Project
 from app.models.task import Task
 from app.schemas.task import TaskCreate, TaskStatusUpdate, TaskUpdate
+from app.services.notifications import mock_send_email
 
 SortBy = Literal["created_at", "deadline", "priority"]
+
+
+async def _notify_assignee(
+    session: AsyncSession,
+    background_tasks: BackgroundTasks,
+    *,
+    assignee_id: int,
+    message: str,
+) -> None:
+    await create_notification(session, user_id=assignee_id, message=message)
+    assignee = await get_user_by_id(session, assignee_id)
+    if assignee:
+        background_tasks.add_task(mock_send_email, assignee.email, message)
 
 
 def _apply_task_filters(
@@ -87,6 +104,7 @@ async def create_task(
     project_id: int,
     author_id: int,
     task_in: TaskCreate,
+    background_tasks: BackgroundTasks,
 ) -> Task:
     task = Task(
         title=task_in.title,
@@ -100,6 +118,15 @@ async def create_task(
     session.add(task)
     await session.commit()
     await session.refresh(task)
+
+    if task_in.assignee_id is not None and task_in.assignee_id != author_id:
+        await _notify_assignee(
+            session,
+            background_tasks,
+            assignee_id=task_in.assignee_id,
+            message=f'You have been assigned to task "{task.title}"',
+        )
+
     return task
 
 
@@ -107,14 +134,32 @@ async def update_task(
     session: AsyncSession,
     obj: Task,
     obj_in: TaskUpdate,
+    *,
+    actor_id: int,
+    background_tasks: BackgroundTasks,
 ) -> Task:
     update_data = obj_in.model_dump(exclude_unset=True)
+    old_assignee_id = obj.assignee_id
     for field, value in update_data.items():
         setattr(obj, field, value)
 
     session.add(obj)
     await session.commit()
     await session.refresh(obj)
+
+    if (
+        "assignee_id" in update_data
+        and obj.assignee_id is not None
+        and obj.assignee_id != old_assignee_id
+        and obj.assignee_id != actor_id
+    ):
+        await _notify_assignee(
+            session,
+            background_tasks,
+            assignee_id=obj.assignee_id,
+            message=f'You have been assigned to task "{obj.title}"',
+        )
+
     return obj
 
 

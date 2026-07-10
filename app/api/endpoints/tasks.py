@@ -2,7 +2,15 @@ from __future__ import annotations
 
 from typing import Annotated, List, Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Query,
+    Response,
+    status,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
@@ -70,6 +78,7 @@ async def create(
     payload: TaskCreate,
     session: SessionDep,
     current_user: CurrentUserDep,
+    background_tasks: BackgroundTasks,
 ):
     project = await get_project(session, project_id)
     if project is None:
@@ -82,6 +91,7 @@ async def create(
         project_id=project_id,
         author_id=current_user.id,
         task_in=payload,
+        background_tasks=background_tasks,
     )
 
 
@@ -104,6 +114,7 @@ async def patch(
     payload: TaskUpdate,
     session: SessionDep,
     current_user: CurrentUserDep,
+    background_tasks: BackgroundTasks,
 ):
     task = await get_task(session, task_id)
     if task is None:
@@ -113,7 +124,13 @@ async def patch(
     if "assignee_id" in payload.model_dump(exclude_unset=True):
         check_assignee_is_project_member(task.project, payload.assignee_id)
 
-    return await update_task(session, task, payload)
+    return await update_task(
+        session,
+        task,
+        payload,
+        actor_id=current_user.id,
+        background_tasks=background_tasks,
+    )
 
 
 @router.patch("/tasks/{task_id}/status", response_model=TaskRead)
