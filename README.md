@@ -13,12 +13,14 @@ docker compose up --build
 
 On startup the API container runs `alembic upgrade head`, then serves the app.
 
-| Service | URL |
-|---------|-----|
-| API | http://localhost:8000 |
-| Swagger UI | http://localhost:8000/docs |
-| ReDoc | http://localhost:8000/redoc |
-| Health | http://localhost:8000/health |
+
+| Service    | URL                                                          |
+| ---------- | ------------------------------------------------------------ |
+| API        | [http://localhost:8000](http://localhost:8000)               |
+| Swagger UI | [http://localhost:8000/docs](http://localhost:8000/docs)     |
+| ReDoc      | [http://localhost:8000/redoc](http://localhost:8000/redoc)   |
+| Health     | [http://localhost:8000/health](http://localhost:8000/health) |
+
 
 Compose services: `db` (PostgreSQL 16), `redis`, `api`, `worker` (Celery).
 
@@ -34,13 +36,15 @@ source .venv/bin/activate
 pip install -r requirements.txt -r requirements-dev.txt
 ```
 
-4. Migrate and run:
+1. Migrate and run:
 
 ```bash
 alembic upgrade head
 uvicorn app.main:app --reload
 celery -A app.core.celery_app:celery_app worker --loglevel=info
 ```
+
+
 
 ### Tests
 
@@ -65,21 +69,21 @@ CI (GitHub Actions) runs format check, ruff, mypy, pytest with coverage, and a D
 
 Base path: `/api/v1`
 
-| Area | Endpoints |
-|------|-----------|
-| Auth | `POST /auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout` |
-| Users | `GET/PATCH/DELETE /users/me`, admin user management |
-| Projects | CRUD `/projects`, members `POST/DELETE /projects/{id}/members/{user_id}` |
-| Tasks | CRUD under project / by id, `PATCH /tasks/{id}/status`, filters + sort + pagination |
-| Search | `GET /projects/{id}/tasks/search?q=` |
-| Comments | CRUD on tasks / by comment id |
-| Activity | `GET /projects/{id}/activity` |
-| Notifications | `GET /notifications/unread`, `PATCH /notifications/{id}/read` |
-| Live updates | `WS /projects/{id}/ws?token=<access_jwt>` — task status changes |
+
+| Area          | Endpoints                                                                           |
+| ------------- | ----------------------------------------------------------------------------------- |
+| Auth          | `POST /auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`               |
+| Users         | `GET/PATCH/DELETE /users/me`, admin user management                                 |
+| Projects      | CRUD `/projects`, members `POST/DELETE /projects/{id}/members/{user_id}`            |
+| Tasks         | CRUD under project / by id, `PATCH /tasks/{id}/status`, filters + sort + pagination |
+| Search        | `GET /projects/{id}/tasks/search?q=`                                                |
+| Comments      | CRUD on tasks / by comment id                                                       |
+| Activity      | `GET /projects/{id}/activity`                                                       |
+| Notifications | `GET /notifications/unread`, `PATCH /notifications/{id}/read`                       |
+| Live updates  | `WS /projects/{id}/ws?token=<access_jwt>` — task status changes                     |
+
 
 Interactive docs: [Swagger UI](http://localhost:8000/docs).
-
-Postman collection: [`docs/Task_Tracker_API.postman_collection.json`](docs/Task_Tracker_API.postman_collection.json) (import into Postman; run **Auth → Login** to set `accessToken`).
 
 ## Design decisions
 
@@ -92,8 +96,10 @@ Postman collection: [`docs/Task_Tracker_API.postman_collection.json`](docs/Task_
 - **Notifications:** On assignee change (not self-assign), create an in-app notification and enqueue a Celery mock email (log only, no SMTP).
 - **Rate limiting:** Applied globally via SlowAPI (default in-memory limiter suitable for single-instance demo).
 - **Logging:** Structured logs via `structlog` with a per-request `request_id` middleware.
-- **Task list cache:** Redis caches `GET /projects/{id}/tasks` responses (TTL 60s). Keys include filters/sort/pagination. Mutations (create/update/status/delete) invalidate `tasks:list:{project_id}:*`. Disable with `CACHE_ENABLED=false`.
+- **Task list cache:** Redis caches `GET /projects/{id}/tasks` responses (TTL 60s). Keys include filters/sort/pagination. Mutations (create/update/status/delete) invalidate `tasks:list:{project_id}:`*. Disable with `CACHE_ENABLED=false`.
 - **WebSocket:** `WS /api/v1/projects/{id}/ws?token=...` broadcasts `{event: task_status_changed, ...}` after a successful status PATCH. Auth uses the same JWT access token; membership is checked on connect.
+
+
 
 ## AI usage
 
@@ -123,3 +129,4 @@ docs/           # Postman collection
 tests/          # pytest + testcontainers
 scripts/        # Docker entrypoint (migrations)
 ```
+
