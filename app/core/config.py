@@ -20,6 +20,7 @@ class Settings(BaseSettings):
 
     REDIS_HOST: str
     REDIS_PORT: int
+    CACHE_ENABLED: bool = True
 
     SECRET_KEY: str
     ALGORITHM: str

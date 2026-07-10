@@ -6,6 +6,7 @@ from sqlalchemy import Select, case, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.cache import invalidate_project_task_list
 from app.crud.notification import create_notification
 from app.crud.user import get_user_by_id
 from app.models.enums import TaskPriority, TaskStatus
@@ -100,6 +101,9 @@ async def search_tasks(
     session: AsyncSession,
     project_id: int,
     query: str,
+    *,
+    skip: int = 0,
+    limit: int = 100,
 ) -> list[Task]:
     pattern = f"%{query}%"
     stmt = (
@@ -112,6 +116,8 @@ async def search_tasks(
             )
         )
         .order_by(Task.created_at.desc())
+        .offset(skip)
+        .limit(limit)
     )
     result = await session.execute(stmt)
     return list(result.scalars().all())
@@ -136,6 +142,7 @@ async def create_task(
     session.add(task)
     await session.commit()
     await session.refresh(task)
+    await invalidate_project_task_list(project_id)
 
     if task_in.assignee_id is not None and task_in.assignee_id != author_id:
         await _notify_assignee(
@@ -162,6 +169,7 @@ async def update_task(
     session.add(obj)
     await session.commit()
     await session.refresh(obj)
+    await invalidate_project_task_list(obj.project_id)
 
     if (
         "assignee_id" in update_data
@@ -202,9 +210,12 @@ async def update_task_status(
     session.add(obj)
     await session.commit()
     await session.refresh(obj)
+    await invalidate_project_task_list(obj.project_id)
     return obj
 
 
 async def delete_task(session: AsyncSession, task: Task) -> None:
+    project_id = task.project_id
     await session.delete(task)
     await session.commit()
+    await invalidate_project_task_list(project_id)
