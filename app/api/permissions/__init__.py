@@ -2,6 +2,7 @@ from app.api.permissions.comments import (
     check_comment_access,
     check_comment_author,
 )
+from app.api.permissions.notifications import check_notification_access
 from app.api.permissions.projects import (
     check_project_edit,
     check_project_member,
@@ -30,6 +31,7 @@ __all__ = [
     "check_assignee_is_project_member",
     "check_comment_access",
     "check_comment_author",
+    "check_notification_access",
     "check_can_delete_user",
     "check_can_update_user",
     "check_forbid_role_in_me_payload",
